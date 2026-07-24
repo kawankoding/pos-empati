@@ -1,0 +1,30 @@
+appId: com.tokoempati.pos
+productName: POS Empati
+directories:
+  output: release
+files:
+  - dist/**/*
+  - dist-electron/**/*
+  - package.json
+  - node_modules/**/*
+asar: true
+win:
+  target:
+    - nsis
+  icon: public/images/toko-empati.png
+mac:
+  target:
+    - dmg
+  icon: public/images/toko-empati.png
+  hardenedRuntime: true
+linux:
+  target:
+    - AppImage
+  icon: public/images/toko-empati.png
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+publish:
+  provider: github
+  owner: kawankoding
+  repo: pos-empati
