@@ -72,11 +72,7 @@ export default function Sidebar({
     <aside className="shadow-level-1 flex h-full w-20 shrink-0 flex-col items-center border-r border-slate-200 bg-white py-6">
       {/* Brand */}
       <div className="mb-8">
-        <img
-          src={logo}
-          alt="Toko Empati"
-          className="h-8 w-auto object-contain"
-        />
+        <img src={logo} alt="Toko Empati" className="h-8 w-auto object-contain" />
       </div>
 
       {/* Primary nav */}

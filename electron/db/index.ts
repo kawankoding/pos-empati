@@ -78,9 +78,9 @@ export function backupDatabase(destPath: string, appVersion: string): BackupMeta
   const checksum = crypto.createHash("sha256").update(fileBuffer).digest("hex");
 
   // 4. Read schema version
-  const schemaRow = db
-    .prepare("SELECT MAX(version) AS version FROM schema_version")
-    .get() as { version: number | null };
+  const schemaRow = db.prepare("SELECT MAX(version) AS version FROM schema_version").get() as {
+    version: number | null;
+  };
   const schemaVersion = schemaRow.version ?? 0;
 
   const meta: BackupMeta = {
@@ -209,9 +209,7 @@ export function restoreDatabase(
   const backupBuf = fs.readFileSync(backupPath);
   const marker = Buffer.from("--POS_EMPATI_BACKUP_META\n");
   const metaStart = backupBuf.lastIndexOf(marker);
-  const dbOnly = metaStart !== -1
-    ? backupBuf.subarray(0, metaStart)
-    : backupBuf;
+  const dbOnly = metaStart !== -1 ? backupBuf.subarray(0, metaStart) : backupBuf;
 
   fs.writeFileSync(targetPath, dbOnly);
 
@@ -229,7 +227,11 @@ export function restoreDatabase(
   } catch (e) {
     // Roll back on restore failure
     if (sqlite) {
-      try { sqlite.close(); } catch { /* no-op */ }
+      try {
+        sqlite.close();
+      } catch {
+        /* no-op */
+      }
       sqlite = null;
     }
     if (fs.existsSync(rollbackPath)) {

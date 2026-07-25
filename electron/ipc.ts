@@ -92,14 +92,20 @@ export function registerIpc(): void {
         return { ok: false };
       }
       const db = getDb();
-      const row = db.prepare("SELECT id, username, role, is_active FROM users WHERE id = ? AND username = ?")
-        .get(user.id, user.username) as { id: number; username: string; role: string; is_active: number } | undefined;
+      const row = db
+        .prepare("SELECT id, username, role, is_active FROM users WHERE id = ? AND username = ?")
+        .get(user.id, user.username) as
+        { id: number; username: string; role: string; is_active: number } | undefined;
 
       if (!row || row.is_active !== 1) {
         return { ok: false };
       }
 
-      registerSession(event.sender.id, { id: row.id, username: row.username, role: row.role as "admin" | "cashier" });
+      registerSession(event.sender.id, {
+        id: row.id,
+        username: row.username,
+        role: row.role as "admin" | "cashier",
+      });
       return { ok: true, user: { id: row.id, username: row.username, role: row.role } };
     },
   );
@@ -501,24 +507,21 @@ export function registerIpc(): void {
   });
 
   /* ── Export ── */
-  ipcMain.handle(
-    "export:csv",
-    async (_event, payload: { csv: string; defaultName: string }) => {
-      try {
-        const { filePath } = await dialog.showSaveDialog({
-          title: "Ekspor Laporan Penjualan",
-          defaultPath: payload.defaultName,
-          filters: [{ name: "CSV", extensions: ["csv"] }],
-        });
-        if (!filePath) return { ok: false, message: "Dibatalkan." };
+  ipcMain.handle("export:csv", async (_event, payload: { csv: string; defaultName: string }) => {
+    try {
+      const { filePath } = await dialog.showSaveDialog({
+        title: "Ekspor Laporan Penjualan",
+        defaultPath: payload.defaultName,
+        filters: [{ name: "CSV", extensions: ["csv"] }],
+      });
+      if (!filePath) return { ok: false, message: "Dibatalkan." };
 
-        // Write UTF-8 BOM so Excel recognizes the encoding
-        const BOM = "\uFEFF";
-        fs.writeFileSync(filePath, BOM + payload.csv, "utf-8");
-        return { ok: true };
-      } catch (err) {
-        return { ok: false, message: (err as Error).message };
-      }
-    },
-  );
+      // Write UTF-8 BOM so Excel recognizes the encoding
+      const BOM = "\uFEFF";
+      fs.writeFileSync(filePath, BOM + payload.csv, "utf-8");
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, message: (err as Error).message };
+    }
+  });
 }

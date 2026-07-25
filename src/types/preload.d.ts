@@ -30,7 +30,11 @@ declare global {
       logout: () => Promise<{ ok: true }>;
 
       checkSession: () => Promise<AuthUser | null>;
-      restoreSession: (user: { id: number; username: string; role: string }) => Promise<{ ok: true; user: AuthUser } | { ok: false }>;
+      restoreSession: (user: {
+        id: number;
+        username: string;
+        role: string;
+      }) => Promise<{ ok: true; user: AuthUser } | { ok: false }>;
 
       listUsers: () => Promise<PublicUser[]>;
       createUser: (payload: {

@@ -316,9 +316,7 @@ export default function SalesPage() {
             <p className="text-xs font-semibold tracking-wider text-slate-500 uppercase">
               Total Keuntungan
             </p>
-            <h3 className="text-2xl font-bold text-slate-800">
-              {formatIdr(summary.totalProfit)}
-            </h3>
+            <h3 className="text-2xl font-bold text-slate-800">{formatIdr(summary.totalProfit)}</h3>
           </div>
         </div>
       </div>

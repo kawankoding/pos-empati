@@ -25,7 +25,8 @@ export function useSession() {
     const localUser = readSession();
     if (!localUser) return;
 
-    api.restoreSession(localUser)
+    api
+      .restoreSession(localUser)
       .then((result) => {
         if (cancelled) return;
         if (result.ok) {
@@ -37,7 +38,9 @@ export function useSession() {
       })
       .catch(() => {});
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const login = useCallback((user: AuthUser) => {

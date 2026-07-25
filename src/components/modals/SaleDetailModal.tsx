@@ -56,9 +56,12 @@ export default function SaleDetailModal({ open, onClose, saleId }: SaleDetailMod
   const [printer, setPrinter] = useState<{ vendorId: number; productId: number } | null>(null);
 
   useEffect(() => {
-    api.listPrinters().then((devices) => {
-      if (devices.length > 0) setPrinter(devices[0]);
-    }).catch(() => {});
+    api
+      .listPrinters()
+      .then((devices) => {
+        if (devices.length > 0) setPrinter(devices[0]);
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {

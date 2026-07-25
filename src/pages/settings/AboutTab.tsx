@@ -87,11 +87,7 @@ export default function AboutTab() {
         {/* App Information */}
         <section className="flex items-center gap-6 rounded-xl border border-slate-200 bg-white p-6 shadow-sm lg:col-span-2">
           <div className="flex h-32 w-32 shrink-0 items-center justify-center rounded-3xl bg-emerald-50 p-4">
-            <img
-              className="h-full w-full object-contain"
-              src={logo}
-              alt="Toko Empati Logo"
-            />
+            <img className="h-full w-full object-contain" src={logo} alt="Toko Empati Logo" />
           </div>
           <div className="min-w-0 flex-1">
             <h2 className="text-2xl font-semibold text-slate-800">

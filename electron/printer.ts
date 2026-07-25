@@ -117,10 +117,7 @@ async function printLogo(printer: any, logoPath: string): Promise<void> {
   const yL = height & 0xff;
   const yH = (height >> 8) & 0xff;
 
-  const cmd = Buffer.concat([
-    Buffer.from([0x1d, 0x76, 0x30, 0x00, xL, xH, yL, yH]),
-    bitmap,
-  ]);
+  const cmd = Buffer.concat([Buffer.from([0x1d, 0x76, 0x30, 0x00, xL, xH, yL, yH]), bitmap]);
 
   printer.raw(cmd);
   printer.text("");
@@ -130,9 +127,11 @@ async function printLogo(printer: any, logoPath: string): Promise<void> {
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
 
-function fmt(n: number): string { return n.toLocaleString("id-ID"); }
+function fmt(n: number): string {
+  return n.toLocaleString("id-ID");
+}
 
-const LINE_WIDTH = 32;  // Font A (~12 dots/char on 58mm)
+const LINE_WIDTH = 32; // Font A (~12 dots/char on 58mm)
 const LINE_WIDTH_B = 42; // Font B (~9 dots/char on 58mm)
 
 /** Left-align label, right-align amount within given width */
@@ -144,7 +143,6 @@ function line(label: string, amount: string, width = LINE_WIDTH): string {
 function divider(width = LINE_WIDTH): string {
   return "─".repeat(width);
 }
-
 
 /* ------------------------------------------------------------------ */
 /*  Receipt layout                                                    */
@@ -195,14 +193,7 @@ function buildReceipt(printer: any, data: ReceiptData): void {
   printer.text(line("KEMBALI", `Rp ${fmt(data.change)}`));
 
   // ── Footer ──
-  printer
-    .align("ct")
-    .text("")
-    .text("Terima kasih telah")
-    .text("berbelanja")
-    .text("")
-    .feed(1)
-    .cut();
+  printer.align("ct").text("").text("Terima kasih telah").text("berbelanja").text("").feed(1).cut();
 }
 
 /* ------------------------------------------------------------------ */

@@ -21,15 +21,18 @@ export default function DataTab() {
 
   useEffect(() => {
     // Load last backup date from settings
-    api.getSettings().then((s) => {
-      if (s.backup_date) {
-        setBackupMeta({
-          timestamp: s.backup_date,
-          schemaVersion: Number(s.backup_schema_version ?? "0"),
-          checksum: s.backup_checksum ?? "",
-        });
-      }
-    }).catch(() => {});
+    api
+      .getSettings()
+      .then((s) => {
+        if (s.backup_date) {
+          setBackupMeta({
+            timestamp: s.backup_date,
+            schemaVersion: Number(s.backup_schema_version ?? "0"),
+            checksum: s.backup_checksum ?? "",
+          });
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const handleBackup = useCallback(async () => {
@@ -40,7 +43,10 @@ export default function DataTab() {
         setBackupMeta(result.meta);
         // Store backup info in settings
         await api.setSetting({ key: "backup_date", value: result.meta.timestamp });
-        await api.setSetting({ key: "backup_schema_version", value: String(result.meta.schemaVersion) });
+        await api.setSetting({
+          key: "backup_schema_version",
+          value: String(result.meta.schemaVersion),
+        });
         await api.setSetting({ key: "backup_checksum", value: result.meta.checksum });
         success("Database berhasil dicadangkan.", "Backup tersimpan dengan aman.");
       } else {
@@ -171,8 +177,8 @@ export default function DataTab() {
             <div className="min-w-0 flex-1">
               <h3 className="text-xl font-semibold text-slate-800">Pulihkan Database Lokal</h3>
               <p className="mt-2 text-sm text-slate-500">
-                Pilih file cadangan yang dibuat sebelumnya untuk memulihkan kondisi toko.
-                Berguna saat migrasi ke perangkat baru.
+                Pilih file cadangan yang dibuat sebelumnya untuk memulihkan kondisi toko. Berguna
+                saat migrasi ke perangkat baru.
               </p>
 
               <div className="mt-4 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3">
@@ -206,25 +212,20 @@ export default function DataTab() {
         <div className="rounded-2xl bg-slate-50 p-6">
           <h4 className="text-sm font-semibold text-slate-800">Backup Manual</h4>
           <p className="mt-2 text-sm text-slate-500">
-            Backup disimpan sebagai file .db yang dapat dipindahkan ke komputer lain.
-            Lakukan backup secara berkala sebelum pembaruan sistem.
+            Backup disimpan sebagai file .db yang dapat dipindahkan ke komputer lain. Lakukan backup
+            secara berkala sebelum pembaruan sistem.
           </p>
         </div>
         <div className="rounded-2xl bg-slate-50 p-6">
           <h4 className="text-sm font-semibold text-slate-800">Keamanan Data</h4>
           <p className="mt-2 text-sm text-slate-500">
-            Setiap backup dilengkapi checksum SHA-256 untuk memverifikasi integritas data.
-            Backup yang rusak atau dimodifikasi akan ditolak saat pemulihan.
+            Setiap backup dilengkapi checksum SHA-256 untuk memverifikasi integritas data. Backup
+            yang rusak atau dimodifikasi akan ditolak saat pemulihan.
           </p>
         </div>
       </div>
 
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".db"
-        className="hidden"
-      />
+      <input ref={fileInputRef} type="file" accept=".db" className="hidden" />
 
       <ConfirmModal
         open={restoreConfirmOpen}

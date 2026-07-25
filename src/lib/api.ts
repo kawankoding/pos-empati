@@ -119,7 +119,11 @@ export const api = {
     return window.api.checkSession();
   },
 
-  restoreSession(user: { id: number; username: string; role: string }): Promise<{ ok: true; user: AuthUser } | { ok: false }> {
+  restoreSession(user: {
+    id: number;
+    username: string;
+    role: string;
+  }): Promise<{ ok: true; user: AuthUser } | { ok: false }> {
     return window.api.restoreSession(user);
   },
 
@@ -288,7 +292,7 @@ export const api = {
   },
 
   createBackup(): Promise<
-    { ok: true; meta: { timestamp: string; schemaVersion: number; checksum: string } }
+    | { ok: true; meta: { timestamp: string; schemaVersion: number; checksum: string } }
     | { ok: false; message: string }
   > {
     return window.api.createBackup();

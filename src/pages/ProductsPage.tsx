@@ -264,7 +264,13 @@ export default function ProductsPage() {
     try {
       const escapeCsv = (val: string) => `"${val.replace(/"/g, '""')}"`;
       const headers = [
-        "Nama Produk", "SKU", "Kategori", "Harga Beli", "Harga Jual", "Stok", "Laba Per Unit",
+        "Nama Produk",
+        "SKU",
+        "Kategori",
+        "Harga Beli",
+        "Harga Jual",
+        "Stok",
+        "Laba Per Unit",
       ];
 
       const categoryMap = Object.fromEntries(categories.map((c) => [c.id, c.name]));
@@ -279,8 +285,14 @@ export default function ProductsPage() {
         String(p.sell_price - p.buy_price),
       ]);
 
-      const csv = headers.map(escapeCsv).join(",") + "\n" + rows.map((r) => r.map(escapeCsv).join(",")).join("\n");
-      const result = await api.exportCsv({ csv, defaultName: `produk-${new Date().toISOString().slice(0, 10)}.csv` });
+      const csv =
+        headers.map(escapeCsv).join(",") +
+        "\n" +
+        rows.map((r) => r.map(escapeCsv).join(",")).join("\n");
+      const result = await api.exportCsv({
+        csv,
+        defaultName: `produk-${new Date().toISOString().slice(0, 10)}.csv`,
+      });
       if (result.ok) success("Data produk berhasil diekspor.");
       else if (result.message !== "Dibatalkan.") toastError(result.message);
     } catch {
@@ -357,7 +369,12 @@ export default function ProductsPage() {
                   className="input-base pl-10"
                 />
               </div>
-              <Button variant="secondary" leftIcon={<Download size={16} />} loading={exporting} onClick={handleExport}>
+              <Button
+                variant="secondary"
+                leftIcon={<Download size={16} />}
+                loading={exporting}
+                onClick={handleExport}
+              >
                 {exporting ? "Mengekspor..." : "Ekspor"}
               </Button>
             </div>

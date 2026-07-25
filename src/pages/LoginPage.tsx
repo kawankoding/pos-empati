@@ -79,11 +79,7 @@ export default function LoginPage({
       <div className="relative z-10 w-full max-w-[440px]">
         {/* Logo */}
         <div className="mb-8 flex flex-col items-center">
-          <img
-            src={logo}
-            alt="Toko Empati"
-            className="h-32 w-auto object-contain"
-          />
+          <img src={logo} alt="Toko Empati" className="h-32 w-auto object-contain" />
         </div>
 
         {/* Login / Setup card */}
