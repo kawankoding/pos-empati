@@ -78,6 +78,7 @@ export type SaleRecord = {
   payment_method: string;
   status: string;
   created_at: string;
+  profit: number;
 };
 
 export type SaleItemRecord = {

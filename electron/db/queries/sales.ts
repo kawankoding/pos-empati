@@ -10,6 +10,7 @@ export type SaleRecord = {
   payment_method: string;
   status: string;
   created_at: string;
+  profit: number;
 };
 
 export type SaleItemRecord = {
@@ -30,7 +31,9 @@ export const saleQueries = {
     return db
       .prepare(
         `SELECT s.id, s.cashier_id, COALESCE(NULLIF(u.name, ''), u.username) AS cashier_name,
-                s.total, s.paid, s.change_amount, s.payment_method, s.status, s.created_at
+                s.total, s.paid, s.change_amount, s.payment_method, s.status, s.created_at,
+                COALESCE((SELECT SUM(si.subtotal - COALESCE(si.buy_price, 0) * si.qty)
+                          FROM sale_items si WHERE si.sale_id = s.id), 0) AS profit
          FROM sales s
          LEFT JOIN users u ON s.cashier_id = u.id
          ORDER BY s.created_at DESC`,

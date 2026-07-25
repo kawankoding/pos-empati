@@ -53,6 +53,13 @@ export default function SaleDetailModal({ open, onClose, saleId }: SaleDetailMod
   const [detail, setDetail] = useState<SaleDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [printer, setPrinter] = useState<{ vendorId: number; productId: number } | null>(null);
+
+  useEffect(() => {
+    api.listPrinters().then((devices) => {
+      if (devices.length > 0) setPrinter(devices[0]);
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!open || saleId === null) return;
@@ -97,6 +104,8 @@ export default function SaleDetailModal({ open, onClose, saleId }: SaleDetailMod
       cashier: detail.cashier_name,
       txId: `#TE-${String(detail.id).padStart(4, "0")}`,
       logoPath: "/images/toko-empati.png",
+      vendorId: printer?.vendorId,
+      productId: printer?.productId,
     });
   };
 

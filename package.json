@@ -30,7 +30,8 @@
     "typecheck:electron": "tsc -p tsconfig.electron.json --noEmit",
     "typecheck": "npm run typecheck:renderer && npm run typecheck:electron",
     "package": "npm run build && electron-builder --config electron-builder.yml",
-    "package:dir": "npm run build && electron-builder --config electron-builder.yml --dir"
+    "package:dir": "npm run build && electron-builder --config electron-builder.yml --dir",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
@@ -41,7 +42,8 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.6.3",
-    "sharp": "^0.35.3"
+    "sharp": "^0.35.3",
+    "usb": "^2.14.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -57,6 +59,7 @@
     "eslint": "^10.7.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.3",
+    "patch-package": "^8.0.1",
     "prettier": "^3.9.5",
     "prettier-plugin-tailwindcss": "^0.8.1",
     "tailwindcss": "^4.1.11",
@@ -66,5 +69,8 @@
     "vite": "^7.0.0",
     "vitest": "^4.1.10",
     "wait-on": "^8.0.3"
+  },
+  "allowScripts": {
+    "usb@2.14.0": true
   }
 }

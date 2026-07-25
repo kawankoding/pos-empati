@@ -132,6 +132,7 @@ export default function ProductModal({
 
         <FieldSelect
           label="Kategori"
+          searchable={true}
           value={form.category_id ?? ""}
           onChange={(e) =>
             setForm((prev) => ({

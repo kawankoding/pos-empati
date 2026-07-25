@@ -78,6 +78,7 @@ export default function PosPage({ session }: { session: AuthUser }) {
 
   const { success, error: toastError, info, warning } = useToast();
   const { settings } = useSettings();
+  const [printer, setPrinter] = useState<{ vendorId: number; productId: number } | null>(null);
 
   const loadData = async (): Promise<void> => {
     const [categoriesData, productsData] = await Promise.all([
@@ -90,6 +91,9 @@ export default function PosPage({ session }: { session: AuthUser }) {
 
   useEffect(() => {
     void loadData();
+    api.listPrinters().then((devices) => {
+      if (devices.length > 0) setPrinter(devices[0]);
+    }).catch(() => {});
   }, []);
 
   const parkCart = (): void => {
@@ -124,7 +128,12 @@ export default function PosPage({ session }: { session: AuthUser }) {
       return;
     }
     try {
-      await api.printReceipt({ ...receipt, logoPath: "/images/toko-empati.png" });
+      await api.printReceipt({
+        ...receipt,
+        logoPath: "/images/toko-empati.png",
+        vendorId: printer?.vendorId,
+        productId: printer?.productId,
+      });
       success("Struk dicetak ulang.");
     } catch {
       toastError("Gagal mencetak ulang struk.");
@@ -211,7 +220,12 @@ export default function PosPage({ session }: { session: AuthUser }) {
 
       // Print if user clicked "Bayar & Cetak" or auto-print is enabled
       if (printAfterPay || settings?.auto_print_receipts === "true") {
-        void api.printReceipt({ ...receiptData, logoPath: "/images/toko-empati.png" });
+        void api.printReceipt({
+          ...receiptData,
+          logoPath: "/images/toko-empati.png",
+          vendorId: printer?.vendorId,
+          productId: printer?.productId,
+        });
       }
       setCart([]); setPaid(0);
       await loadData();

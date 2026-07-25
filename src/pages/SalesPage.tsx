@@ -147,8 +147,8 @@ export default function SalesPage() {
     const completed = filteredSales.filter((s) => s.status === "completed");
     const totalSales = completed.reduce((sum, s) => sum + s.total, 0);
     const totalTransactions = completed.length;
-    const avgOrderValue = totalTransactions > 0 ? totalSales / totalTransactions : 0;
-    return { totalSales, totalTransactions, avgOrderValue };
+    const totalProfit = completed.reduce((sum, s) => sum + (s.profit ?? 0), 0);
+    return { totalSales, totalTransactions, totalProfit };
   }, [filteredSales]);
 
   // Pagination
@@ -314,10 +314,10 @@ export default function SalesPage() {
           </div>
           <div>
             <p className="text-xs font-semibold tracking-wider text-slate-500 uppercase">
-              Rata-rata Nilai Pesanan
+              Total Keuntungan
             </p>
             <h3 className="text-2xl font-bold text-slate-800">
-              {formatIdr(Math.round(summary.avgOrderValue))}
+              {formatIdr(summary.totalProfit)}
             </h3>
           </div>
         </div>
@@ -417,6 +417,9 @@ export default function SalesPage() {
                       Total
                     </th>
                     <th className="px-5 py-3 text-xs font-semibold tracking-wider text-slate-500 uppercase">
+                      Margin
+                    </th>
+                    <th className="px-5 py-3 text-xs font-semibold tracking-wider text-slate-500 uppercase">
                       Status
                     </th>
                     <th className="px-5 py-3" />
@@ -444,6 +447,9 @@ export default function SalesPage() {
                         >
                           {formatIdr(sale.total)}
                         </td>
+                        <td className="px-5 py-3 font-semibold text-emerald-700">
+                          {formatIdr(sale.profit ?? 0)}
+                        </td>
                         <td className="px-5 py-3">
                           <StatusBadge status={sale.status} />
                         </td>
@@ -461,7 +467,7 @@ export default function SalesPage() {
                   })}
                   {paginatedSales.length === 0 && error === null && !loading && (
                     <tr>
-                      <td colSpan={7} className="px-5 py-12 text-center text-sm text-slate-500">
+                      <td colSpan={8} className="px-5 py-12 text-center text-sm text-slate-500">
                         Tidak ada transaksi.
                       </td>
                     </tr>

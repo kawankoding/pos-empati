@@ -127,12 +127,33 @@ async function printLogo(printer: any, logoPath: string): Promise<void> {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Helpers                                                            */
+/* ------------------------------------------------------------------ */
+
+function fmt(n: number): string { return n.toLocaleString("id-ID"); }
+
+const LINE_WIDTH = 32;  // Font A (~12 dots/char on 58mm)
+const LINE_WIDTH_B = 42; // Font B (~9 dots/char on 58mm)
+
+/** Left-align label, right-align amount within given width */
+function line(label: string, amount: string, width = LINE_WIDTH): string {
+  const padded = label.padEnd(width - amount.length, " ");
+  return padded + amount;
+}
+
+function divider(width = LINE_WIDTH): string {
+  return "─".repeat(width);
+}
+
+
+/* ------------------------------------------------------------------ */
 /*  Receipt layout                                                    */
 /* ------------------------------------------------------------------ */
 
 function buildReceipt(printer: any, data: ReceiptData): void {
-  const divider = "───────────────────────────";
+  const div = divider();
 
+  // ── Header ──
   printer
     .font("a")
     .align("ct")
@@ -140,37 +161,47 @@ function buildReceipt(printer: any, data: ReceiptData): void {
     .size(1, 1)
     .text(data.storeName)
     .style("normal")
-    .size(0, 0)
-    .text(data.storeAddress)
+    .size(0, 0);
+
+  if (data.storeAddress) {
+    printer.text(data.storeAddress);
+  }
+
+  printer
     .text("")
-    .text(divider)
+    .text(div)
     .align("lt")
     .text(`Tgl  : ${data.date}`)
     .text(`Kasir: ${data.cashier}`)
     .text(`ID   : ${data.txId}`)
-    .text(divider);
+    .text(div);
 
+  // ── Items ──
+  printer.font("b");
   for (const item of data.items) {
     const lineTotal = item.qty * item.price;
     printer.text(item.name);
-    printer.text(
-      `  ${item.qty} x Rp ${item.price.toLocaleString("id-ID")}  =  Rp ${lineTotal.toLocaleString("id-ID")}`,
-    );
+    const detail = `  ${item.qty} x ${fmt(item.price)}`;
+    printer.text(line(detail, fmt(lineTotal), LINE_WIDTH_B));
   }
+  printer.font("a");
 
+  // ── Totals ──
+  printer.text(div);
+
+  // Right-align amounts using manual column spacing
+  printer.text(line("TOTAL", `Rp ${fmt(data.total)}`));
+  printer.text(line("BAYAR", `Rp ${fmt(data.paid)}`));
+  printer.text(line("KEMBALI", `Rp ${fmt(data.change)}`));
+
+  // ── Footer ──
   printer
-    .text(divider)
-    .align("rt")
-    .style("b")
-    .text(`TOTAL    : Rp ${data.total.toLocaleString("id-ID")}`)
-    .text(`BAYAR    : Rp ${data.paid.toLocaleString("id-ID")}`)
-    .text(`KEMBALI  : Rp ${data.change.toLocaleString("id-ID")}`)
-    .style("normal")
     .align("ct")
     .text("")
-    .text("Terima kasih telah berbelanja")
+    .text("Terima kasih telah")
+    .text("berbelanja")
     .text("")
-    .feed(3)
+    .feed(1)
     .cut();
 }
 
@@ -179,24 +210,25 @@ function buildReceipt(printer: any, data: ReceiptData): void {
 /* ------------------------------------------------------------------ */
 
 function printToConsole(data: ReceiptData): void {
+  const div = "───────────────────────────";
+
   console.log("\n══════════ RECEIPT ══════════");
   console.log(data.storeName);
-  console.log(data.storeAddress);
-  console.log("───────────────────────────");
+  if (data.storeAddress) console.log(data.storeAddress);
+  console.log(div);
   console.log(`Tgl  : ${data.date}`);
   console.log(`Kasir: ${data.cashier}`);
   console.log(`ID   : ${data.txId}`);
-  console.log("───────────────────────────");
+  console.log(div);
   for (const item of data.items) {
     const lineTotal = item.qty * item.price;
-    console.log(
-      `${item.name}  ${item.qty} x Rp ${item.price.toLocaleString("id-ID")} = Rp ${lineTotal.toLocaleString("id-ID")}`,
-    );
+    console.log(item.name);
+    console.log(`  ${item.qty} x ${fmt(item.price)}  =  ${fmt(lineTotal)}`);
   }
-  console.log("───────────────────────────");
-  console.log(`TOTAL    : Rp ${data.total.toLocaleString("id-ID")}`);
-  console.log(`BAYAR    : Rp ${data.paid.toLocaleString("id-ID")}`);
-  console.log(`KEMBALI  : Rp ${data.change.toLocaleString("id-ID")}`);
+  console.log(div);
+  console.log(line("TOTAL", `Rp ${fmt(data.total)}`));
+  console.log(line("BAYAR", `Rp ${fmt(data.paid)}`));
+  console.log(line("KEMBALI", `Rp ${fmt(data.change)}`));
   console.log("");
   console.log("Terima kasih telah berbelanja");
   console.log("══════════════════════════════\n");
