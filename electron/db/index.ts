@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import { runMigrations } from "./migrate";
-import { seedInitialAdmin, seedSettings } from "./seed";
+import { seedInitialAdmin, seedSettings, seedCategoriesAndProducts } from "./seed";
 
 let sqlite: DatabaseSync | null = null;
 let dbPath: string | null = null;
@@ -24,6 +24,7 @@ export function initDatabase(userDataPath: string): DatabaseSync {
   runMigrations(sqlite);
   seedInitialAdmin(sqlite);
   seedSettings(sqlite);
+  seedCategoriesAndProducts(sqlite);
 
   return sqlite;
 }
@@ -222,6 +223,7 @@ export function restoreDatabase(
 
     runMigrations(sqlite);
     seedSettings(sqlite);
+    seedCategoriesAndProducts(sqlite);
 
     dbPath = targetPath;
   } catch (e) {

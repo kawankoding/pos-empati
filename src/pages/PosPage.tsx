@@ -79,6 +79,8 @@ export default function PosPage({ session }: { session: AuthUser }) {
   const { success, error: toastError, info, warning } = useToast();
   const { settings } = useSettings();
   const [printer, setPrinter] = useState<{ vendorId: number; productId: number } | null>(null);
+  const [page, setPage] = useState(1);
+  const ITEMS_PER_PAGE = 12;
 
   const loadData = async (): Promise<void> => {
     const [categoriesData, productsData] = await Promise.all([
@@ -91,6 +93,7 @@ export default function PosPage({ session }: { session: AuthUser }) {
 
   useEffect(() => {
     void loadData();
+    setPage(1);
     api
       .listPrinters()
       .then((devices) => {
@@ -98,6 +101,10 @@ export default function PosPage({ session }: { session: AuthUser }) {
       })
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    setPage(1);
+  }, [selectedCategory, search]);
 
   const parkCart = (): void => {
     if (cart.length === 0) return;
@@ -154,6 +161,13 @@ export default function PosPage({ session }: { session: AuthUser }) {
       return categoryMatch && searchMatch;
     });
   }, [products, search, selectedCategory]);
+
+  const totalPages = Math.max(1, Math.ceil(visibleProducts.length / ITEMS_PER_PAGE));
+  const safePage = Math.min(page, totalPages);
+  const pagedProducts = visibleProducts.slice(
+    (safePage - 1) * ITEMS_PER_PAGE,
+    safePage * ITEMS_PER_PAGE,
+  );
 
   const subtotal = useMemo(
     () => cart.reduce((sum, item) => sum + item.product.sell_price * item.qty, 0),
@@ -262,81 +276,158 @@ export default function PosPage({ session }: { session: AuthUser }) {
   return (
     <div className="h-full overflow-hidden">
       <div className="flex h-full min-h-0 overflow-hidden">
-        <section className="flex min-w-0 flex-1 flex-col">
-          <div className="flex items-center gap-2 overflow-x-auto border-b border-slate-200 bg-white px-5 py-3">
-            <button
-              type="button"
-              onClick={() => setSelectedCategory("all")}
-              className={`rounded-full px-4 py-2 text-sm font-semibold whitespace-nowrap transition ${selectedCategory === "all" ? "bg-emerald-700 text-white shadow-sm" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-            >
-              Semua Produk
-            </button>
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                type="button"
-                onClick={() => setSelectedCategory(category.id)}
-                className={`rounded-full px-4 py-2 text-sm font-semibold whitespace-nowrap transition ${selectedCategory === category.id ? "bg-emerald-700 text-white shadow-sm" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
-              >
-                {category.name}
-              </button>
-            ))}
-            <div className="ml-auto min-w-[240px]">
+        <section className="flex min-h-0 min-w-0 flex-1 flex-col">
+          <div className="flex items-center border-b border-slate-200 bg-white">
+            {/* Search box — left side */}
+            <div className="shrink-0 border-r border-slate-200 px-5 py-3">
               <input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Cari produk atau SKU..."
-                className="input-base"
+                placeholder="Cari produk..."
+                className="input-base w-[220px]"
               />
             </div>
+            {/* Scrollable category pills */}
+            <div className="flex min-w-0 flex-1 items-center gap-2 overflow-x-auto px-5 py-3">
+              <button
+                type="button"
+                onClick={() => setSelectedCategory("all")}
+                className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold whitespace-nowrap transition ${selectedCategory === "all" ? "bg-emerald-700 text-white shadow-sm" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+              >
+                Semua Produk
+              </button>
+              {categories.map((category) => (
+                <button
+                  key={category.id}
+                  type="button"
+                  onClick={() => setSelectedCategory(category.id)}
+                  className={`shrink-0 rounded-full px-4 py-2 text-sm font-semibold whitespace-nowrap transition ${selectedCategory === category.id ? "bg-emerald-700 text-white shadow-sm" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                >
+                  {category.name}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="grid flex-1 grid-cols-2 gap-5 overflow-y-auto p-5 lg:grid-cols-3 2xl:grid-cols-4">
-            {visibleProducts.map((product) => {
+          <div className="grid min-h-0 flex-1 auto-rows-min grid-cols-2 gap-5 overflow-y-auto p-5 lg:grid-cols-3 2xl:grid-cols-4">
+            {pagedProducts.map((product) => {
               const isPulse = lastAddedProductId === product.id;
+              const initials = product.name.slice(0, 2).toUpperCase();
+              const outOfStock = product.stock <= 0;
+              const lowStock = product.stock > 0 && product.stock <= 10;
+
               return (
                 <div
                   key={product.id}
-                  className={`group shadow-level-1 flex h-fit flex-col overflow-hidden rounded-xl border bg-white transition-all ${isPulse ? "scale-[0.99] border-emerald-500 ring-2 ring-emerald-200" : "border-transparent hover:-translate-y-0.5 hover:border-emerald-400"}`}
+                  className={`group overflow-hidden rounded-xl border bg-white transition-all ${isPulse ? "scale-[0.99] border-emerald-500 ring-2 ring-emerald-200" : "border-slate-200 hover:-translate-y-0.5 hover:border-emerald-400 hover:shadow-md"}`}
                 >
                   <button
                     type="button"
-                    disabled={product.stock <= 0}
+                    disabled={outOfStock}
                     onClick={() => addToCart(product)}
-                    className="flex flex-col text-left disabled:cursor-not-allowed disabled:opacity-60"
+                    className="flex w-full flex-col text-left disabled:cursor-not-allowed"
                   >
+                    {/* Image area with monogram + price */}
                     <div
-                      className={`relative aspect-square bg-gradient-to-br ${getProductVisual(product)}`}
+                      className={`relative aspect-[4/3] bg-gradient-to-br ${getProductVisual(product)}`}
                     >
-                      <div className="absolute top-2 right-2 rounded-lg bg-white/90 px-2 py-1 text-sm font-bold text-emerald-700 shadow-sm">
-                        {formatIdr(product.sell_price)}
+                      {/* Out of stock overlay */}
+                      {outOfStock && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-white/60">
+                          <span className="rounded-full bg-red-500 px-3 py-1 text-xs font-bold text-white">
+                            Habis
+                          </span>
+                        </div>
+                      )}
+                      {/* Monogram */}
+                      <div className="flex h-full items-center justify-center">
+                        <span className="text-4xl font-extrabold text-slate-700/20 select-none">
+                          {initials}
+                        </span>
                       </div>
-                      <div className="flex h-full items-center justify-center px-4 text-center text-sm font-semibold text-slate-700">
-                        {product.name}
+                      {/* Price badge */}
+                      <div className="absolute top-2 right-2">
+                        <span className="inline-block rounded-lg bg-white/95 px-2.5 py-1 text-sm font-extrabold text-red-600 shadow-sm backdrop-blur-sm">
+                          {formatIdr(product.sell_price)}
+                        </span>
                       </div>
                     </div>
-                    <div className="flex flex-col p-3">
-                      <h3 className="line-clamp-1 text-sm font-bold text-slate-800">
+
+                    {/* Info area */}
+                    <div className="flex flex-1 flex-col gap-2 p-3">
+                      <h3 className="line-clamp-2 text-sm leading-snug font-bold text-slate-800">
                         {product.name}
                       </h3>
-                      <p className="mt-1 mb-3 line-clamp-1 text-xs text-slate-500">
-                        {product.category_name ?? "Tanpa Kategori"} • Stok {product.stock}
-                      </p>
-                      <span className="mt-auto rounded-lg bg-emerald-700 py-2 text-center text-xs font-bold text-white transition-colors hover:bg-emerald-800">
-                        Tambah ke Keranjang
+                      {/* Category + stock row */}
+                      <div className="flex items-center gap-2">
+                        {product.category_name && (
+                          <span className="inline-block max-w-[120px] truncate rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">
+                            {product.category_name}
+                          </span>
+                        )}
+                        <span
+                          className={`ml-auto flex items-center gap-1 text-xs font-semibold ${outOfStock ? "text-red-500" : lowStock ? "text-amber-600" : "text-emerald-600"}`}
+                        >
+                          <span
+                            className={`inline-block h-1.5 w-1.5 rounded-full ${outOfStock ? "bg-red-500" : lowStock ? "bg-amber-500" : "bg-emerald-500"}`}
+                          />
+                          Stok {product.stock}
+                        </span>
+                      </div>
+                      {/* Add to cart button */}
+                      <span
+                        className={`mt-1 flex items-center justify-center gap-1.5 rounded-lg py-2.5 text-sm font-bold transition-colors ${outOfStock ? "bg-slate-100 text-slate-400" : "bg-emerald-600 text-white group-hover:bg-emerald-700"}`}
+                      >
+                        {outOfStock ? "Stok Habis" : "+ Keranjang"}
                       </span>
                     </div>
                   </button>
                 </div>
               );
             })}
-            {visibleProducts.length === 0 ? (
+            {pagedProducts.length === 0 ? (
               <div className="col-span-full rounded-xl border border-dashed border-slate-300 bg-white p-12 text-center text-sm text-slate-500">
                 Produk tidak ditemukan.
               </div>
             ) : null}
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-1 border-t border-slate-200 bg-white px-5 py-2">
+              <button
+                type="button"
+                disabled={safePage <= 1}
+                onClick={() => setPage(safePage - 1)}
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 text-slate-500 transition-colors hover:bg-slate-100 disabled:opacity-30"
+              >
+                ‹
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setPage(p)}
+                  className={`flex h-8 min-w-[32px] items-center justify-center rounded-lg border px-2 text-sm font-semibold transition-colors ${
+                    p === safePage
+                      ? "border-emerald-700 bg-emerald-700 text-white"
+                      : "border-slate-300 text-slate-600 hover:bg-slate-100"
+                  }`}
+                >
+                  {p}
+                </button>
+              ))}
+              <button
+                type="button"
+                disabled={safePage >= totalPages}
+                onClick={() => setPage(safePage + 1)}
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 text-slate-500 transition-colors hover:bg-slate-100 disabled:opacity-30"
+              >
+                ›
+              </button>
+            </div>
+          )}
         </section>
-        <aside className="flex w-[390px] flex-col border-l border-slate-200 bg-white">
+        <aside className="flex min-h-0 w-[390px] flex-col border-l border-slate-200 bg-white">
           <div className="border-b border-slate-200 p-5">
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-xl font-bold text-slate-800">Pesanan Saat Ini</h3>
@@ -393,7 +484,10 @@ export default function PosPage({ session }: { session: AuthUser }) {
           </div>
           <div className="flex-1 space-y-3 overflow-y-auto p-5">
             {cart.map((item) => (
-              <div key={item.product.id} className="group flex gap-3">
+              <div
+                key={item.product.id}
+                className="group flex gap-3 rounded-lg p-2 transition-colors hover:bg-emerald-50"
+              >
                 <div
                   className={`h-12 w-12 flex-shrink-0 rounded-lg bg-gradient-to-br ${getProductVisual(item.product)} flex items-center justify-center text-xs font-bold text-slate-700`}
                 >

@@ -7,6 +7,11 @@ import { initAutoUpdater } from "./updater";
 
 const isDev = !app.isPackaged;
 let isQuitting = false;
+// Use consistent data directory in dev mode (matches packaged app)
+if (isDev) {
+  const devDataPath = path.join(app.getPath("appData"), "pos-empati");
+  app.setPath("userData", devDataPath);
+}
 
 app.on("before-quit", () => {
   isQuitting = true;

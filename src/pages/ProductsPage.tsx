@@ -136,6 +136,8 @@ export default function ProductsPage() {
   const [initialForm, setInitialForm] = useState<ProductForm>(defaultForm);
   const [search, setSearch] = useState("");
   const [showLowStock, setShowLowStock] = useState(false);
+  const [page, setPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [exporting, setExporting] = useState(false);
 
@@ -161,6 +163,18 @@ export default function ProductsPage() {
 
     return result;
   }, [products, search, showLowStock]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [search, showLowStock]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / ITEMS_PER_PAGE));
+  const safePage = Math.min(page, totalPages);
+  const pagedProducts = filteredProducts.slice(
+    (safePage - 1) * ITEMS_PER_PAGE,
+    safePage * ITEMS_PER_PAGE,
+  );
 
   const categoryMap = useMemo(
     () => Object.fromEntries(categories.map((c) => [c.id, c.name])),
@@ -392,7 +406,7 @@ export default function ProductsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
-              {filteredProducts.map((product) => {
+              {pagedProducts.map((product) => {
                 const profitPerUnit = product.sell_price - product.buy_price;
                 const categoryName =
                   product.category_name ??
@@ -462,7 +476,7 @@ export default function ProductsPage() {
                   </tr>
                 );
               })}
-              {filteredProducts.length === 0 ? (
+              {pagedProducts.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-5 py-12 text-center text-sm text-slate-500">
                     {search.trim()
@@ -476,8 +490,44 @@ export default function ProductsPage() {
 
           <div className="flex items-center justify-between border-t border-slate-200 px-5 py-3">
             <p className="text-xs text-slate-500">
-              Menampilkan {filteredProducts.length} dari {products.length}
+              Menampilkan {filteredProducts.length === 0 ? 0 : (safePage - 1) * ITEMS_PER_PAGE + 1}–
+              {Math.min(safePage * ITEMS_PER_PAGE, filteredProducts.length)} dari{" "}
+              {filteredProducts.length}
             </p>
+            {totalPages > 1 && (
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  disabled={safePage <= 1}
+                  onClick={() => setPage(safePage - 1)}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 text-slate-500 transition-colors hover:bg-slate-100 disabled:opacity-30"
+                >
+                  ‹
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setPage(p)}
+                    className={`flex h-8 min-w-[32px] items-center justify-center rounded-lg border px-2 text-sm font-semibold transition-colors ${
+                      p === safePage
+                        ? "border-emerald-700 bg-emerald-700 text-white"
+                        : "border-slate-300 text-slate-600 hover:bg-slate-100"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  disabled={safePage >= totalPages}
+                  onClick={() => setPage(safePage + 1)}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 text-slate-500 transition-colors hover:bg-slate-100 disabled:opacity-30"
+                >
+                  ›
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -31,6 +31,7 @@
     "typecheck": "npm run typecheck:renderer && npm run typecheck:electron",
     "package": "npm run build && electron-builder --config electron-builder.yml",
     "package:dir": "npm run build && electron-builder --config electron-builder.yml --dir",
+    "seed": "tsx electron/db/run-seed.ts",
     "postinstall": "patch-package"
   },
   "dependencies": {
