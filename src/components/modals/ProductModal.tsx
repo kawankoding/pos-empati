@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CloudUpload } from "lucide-react";
 import FieldCurrency from "@components/ui/FieldCurrency";
 import FieldInput from "@components/ui/FieldInput";
@@ -30,6 +30,8 @@ export default function ProductModal({
   const [form, setForm] = useState<ProductForm>(initialForm);
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const barcodeBuffer = useRef("");
+  const barcodeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Sync form state when the dialog opens with new initial values
   const [prevOpen, setPrevOpen] = useState(open);
@@ -40,6 +42,36 @@ export default function ProductModal({
       setFormError(null);
     }
   }
+
+  // Barcode scanner: capture rapid input into SKU when modal is open
+  useEffect(() => {
+    if (!open) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't intercept when typing in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+      if (e.key === "Enter") {
+        if (barcodeBuffer.current.length > 0) {
+          const sku = barcodeBuffer.current.trim();
+          barcodeBuffer.current = "";
+          setForm((prev) => ({ ...prev, sku }));
+        }
+        return;
+      }
+
+      if (e.key.length === 1) {
+        barcodeBuffer.current += e.key;
+        if (barcodeTimer.current) clearTimeout(barcodeTimer.current);
+        barcodeTimer.current = setTimeout(() => {
+          barcodeBuffer.current = "";
+        }, 80);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [open]);
 
   const handleClose = () => {
     onClose();
@@ -117,10 +149,11 @@ export default function ProductModal({
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <FieldInput
+          autoFocus={!editingId}
           label="SKU / Barcode"
           value={form.sku}
           onChange={(e) => setForm((prev) => ({ ...prev, sku: e.target.value }))}
-          placeholder="TEA-ORG-001"
+          placeholder="Scan barcode atau ketik manual"
         />
 
         <FieldInput

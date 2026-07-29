@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pause, Play, Printer, Save, X } from "lucide-react";
 import Button from "@components/ui/Button";
 import FieldCurrency from "@components/ui/FieldCurrency";
@@ -106,6 +106,44 @@ export default function PosPage({ session }: { session: AuthUser }) {
     setPage(1);
   }, [selectedCategory, search]);
 
+  // ── Barcode scanner support ──
+  const barcodeBuffer = useRef("");
+  const barcodeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if user is typing in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+      // Barcode scanners type fast and end with Enter
+      if (e.key === "Enter") {
+        if (barcodeBuffer.current.length > 0) {
+          const sku = barcodeBuffer.current.trim();
+          barcodeBuffer.current = "";
+          // Find product by SKU (case-insensitive)
+          const product = products.find((p) => p.sku && p.sku.toLowerCase() === sku.toLowerCase());
+          if (product) {
+            addToCart(product);
+          }
+        }
+        return;
+      }
+
+      // Accumulate printable characters
+      if (e.key.length === 1) {
+        barcodeBuffer.current += e.key;
+        // Reset timer — barcode scanners type within 50ms gaps
+        if (barcodeTimer.current) clearTimeout(barcodeTimer.current);
+        barcodeTimer.current = setTimeout(() => {
+          barcodeBuffer.current = "";
+        }, 80);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [products]);
+
   const parkCart = (): void => {
     if (cart.length === 0) return;
     const data: ParkedCart = { items: cart, paid, timestamp: new Date().toISOString() };
@@ -180,19 +218,30 @@ export default function PosPage({ session }: { session: AuthUser }) {
   const changeAmount = Math.max(0, paidAmount - total);
   const itemCount = useMemo(() => cart.reduce((sum, item) => sum + item.qty, 0), [cart]);
 
+  const stockToastRef = useRef({ msg: "", time: 0 });
+
   const addToCart = (product: Product): void => {
+    if (product.stock <= 0) {
+      toastError(`Stok ${product.name} habis.`);
+      return;
+    }
     setLastAddedProductId(product.id);
     setTimeout(() => setLastAddedProductId(null), 320);
     setCart((prev) => {
       const existing = prev.find((item) => item.product.id === product.id);
       if (!existing) return [...prev, { product, qty: 1 }];
-      const nextQty = existing.qty + 1;
-      if (nextQty > product.stock) {
-        toastError(`Stok ${product.name} hanya ${product.stock}.`);
+      if (existing.qty >= product.stock) {
+        // Debounce toast to prevent StrictMode double-fire
+        const msg = `Stok ${product.name} hanya ${product.stock}.`;
+        const now = Date.now();
+        if (stockToastRef.current.msg !== msg || now - stockToastRef.current.time > 500) {
+          stockToastRef.current = { msg, time: now };
+          toastError(msg);
+        }
         return prev;
       }
       return prev.map((item) =>
-        item.product.id === product.id ? { ...item, qty: nextQty } : item,
+        item.product.id === product.id ? { ...item, qty: existing.qty + 1 } : item,
       );
     });
   };
