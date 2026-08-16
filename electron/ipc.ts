@@ -9,10 +9,11 @@ import { productQueries } from "./db/queries/products";
 import { saleQueries } from "./db/queries/sales";
 import { reportQueries } from "./db/queries/reports";
 import { settingsQueries } from "./db/queries/settings";
+import { shoppingListQueries } from "./db/queries/shoppingLists";
 import { registerSession, removeSession, requireAuth, requireAdmin, getSession } from "./auth";
 import { installUpdateAndRestart } from "./updater";
 import { autoUpdater } from "electron-updater";
-import { printReceipt, type ReceiptData } from "./printer";
+import { printReceipt, printShoppingList, type ReceiptData, type ShoppingListPrintData } from "./printer";
 
 export function registerIpc(): void {
   /* ── Auth ── */
@@ -355,6 +356,115 @@ export function registerIpc(): void {
     return reportQueries.summary(payload);
   });
 
+  /* ── Shopping Lists ── */
+  ipcMain.handle("shoppingLists:list", (event) => {
+    try {
+      requireAuth(event.sender.id);
+    } catch {
+      return [];
+    }
+    return shoppingListQueries.listAll();
+  });
+
+  ipcMain.handle("shoppingLists:get", (event, id: number) => {
+    try {
+      requireAuth(event.sender.id);
+    } catch {
+      return null;
+    }
+    return shoppingListQueries.getById(id) ?? null;
+  });
+
+  ipcMain.handle("shoppingLists:create", (event, payload: { name: string }) => {
+    try {
+      requireAuth(event.sender.id);
+    } catch {
+      return { ok: false, message: "Sesi tidak aktif." };
+    }
+    if (!payload.name?.trim()) {
+      return { ok: false, message: "Nama daftar belanja wajib diisi." };
+    }
+    const session = getSession(event.sender.id);
+    return shoppingListQueries.create({ name: payload.name, createdBy: session?.user.id ?? null });
+  });
+
+  ipcMain.handle("shoppingLists:update", (event, payload: { id: number; name: string }) => {
+    try {
+      requireAuth(event.sender.id);
+    } catch {
+      return { ok: false, message: "Sesi tidak aktif." };
+    }
+    if (!payload.name?.trim()) {
+      return { ok: false, message: "Nama daftar belanja wajib diisi." };
+    }
+    return shoppingListQueries.updateName(payload.id, payload.name);
+  });
+
+  ipcMain.handle("shoppingLists:delete", (event, id: number) => {
+    try {
+      requireAuth(event.sender.id);
+    } catch {
+      return { ok: false, message: "Sesi tidak aktif." };
+    }
+    return shoppingListQueries.remove(id);
+  });
+
+  ipcMain.handle(
+    "shoppingLists:addItem",
+    (
+      event,
+      payload: { listId: number; productId: number | null; name: string; qty: number; note: string },
+    ) => {
+      try {
+        requireAuth(event.sender.id);
+      } catch {
+        return { ok: false, message: "Sesi tidak aktif." };
+      }
+      if (payload.qty <= 0) {
+        return { ok: false, message: "Jumlah harus lebih dari nol." };
+      }
+      if (!payload.name?.trim()) {
+        return { ok: false, message: "Nama item wajib diisi." };
+      }
+      return shoppingListQueries.addItem(payload.listId, {
+        productId: payload.productId,
+        name: payload.name,
+        qty: payload.qty,
+        note: payload.note,
+      });
+    },
+  );
+
+  ipcMain.handle(
+    "shoppingLists:updateItem",
+    (event, payload: { id: number; qty?: number; note?: string; checked?: number }) => {
+      try {
+        requireAuth(event.sender.id);
+      } catch {
+        return { ok: false, message: "Sesi tidak aktif." };
+      }
+      return shoppingListQueries.updateItem(payload.id, payload);
+    },
+  );
+
+  ipcMain.handle("shoppingLists:removeItem", (event, id: number) => {
+    try {
+      requireAuth(event.sender.id);
+    } catch {
+      return { ok: false, message: "Sesi tidak aktif." };
+    }
+    return shoppingListQueries.removeItem(id);
+  });
+
+  ipcMain.handle("shoppingLists:clearChecked", (event, listId: number) => {
+    try {
+      requireAuth(event.sender.id);
+    } catch {
+      return { ok: false, message: "Sesi tidak aktif." };
+    }
+    return shoppingListQueries.clearChecked(listId);
+  });
+
   /* ── Settings ── */
   ipcMain.handle("settings:getAll", (event) => {
     try {
@@ -440,6 +550,29 @@ export function registerIpc(): void {
           }
         }
         await printReceipt(data, vendorId, productId);
+        return { ok: true };
+      } catch (err) {
+        return { ok: false, message: (err as Error).message };
+      }
+    },
+  );
+
+  ipcMain.handle(
+    "print:shoppingList",
+    async (_event, payload: ShoppingListPrintData & { vendorId?: number; productId?: number }) => {
+      try {
+        const { vendorId, productId, ...data } = payload;
+        // Resolve logo path from renderer `/images/` to filesystem path
+        let logoPath = data.logoPath;
+        if (logoPath && logoPath.startsWith("/")) {
+          logoPath = path.join(__dirname, "..", logoPath.slice(1));
+          if (fs.existsSync(logoPath)) {
+            data.logoPath = logoPath;
+          } else {
+            delete data.logoPath;
+          }
+        }
+        await printShoppingList(data, vendorId, productId);
         return { ok: true };
       } catch (err) {
         return { ok: false, message: (err as Error).message };

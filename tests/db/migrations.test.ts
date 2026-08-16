@@ -56,8 +56,8 @@ describe("Migrations", () => {
       }>
     ).map((r) => r.version);
 
-    // Should have versions 1 through 4
-    expect(versions).toEqual([1, 2, 3, 4]);
+    // Should have versions 1 through 5
+    expect(versions).toEqual([1, 2, 3, 4, 5]);
   });
 
   it("should be idempotent — re-running migrations should not fail", () => {
@@ -67,9 +67,9 @@ describe("Migrations", () => {
     // Second run — should not throw
     expect(() => runMigrations(db)).not.toThrow();
 
-    // schema_version should still have only 4 unique rows
+    // schema_version should still have only 5 unique rows
     const count = db.prepare("SELECT COUNT(*) as cnt FROM schema_version").get() as { cnt: number };
-    expect(count.cnt).toBe(4);
+    expect(count.cnt).toBe(5);
   });
 
   it("should create tables with correct column types after migrations", () => {
@@ -125,6 +125,28 @@ describe("Migrations", () => {
     expect(indexes).toContain("idx_sale_items_product_id");
   });
 
+  it("should create shopping list tables after migration 005", () => {
+    runMigrations(db);
+
+    const tables = (
+      db
+        .prepare(
+          "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name",
+        )
+        .all() as Array<{ name: string }>
+    ).map((r) => r.name);
+
+    expect(tables).toContain("shopping_lists");
+    expect(tables).toContain("shopping_list_items");
+
+    const indexes = (
+      db
+        .prepare("SELECT name FROM sqlite_master WHERE type = 'index' ORDER BY name")
+        .all() as Array<{ name: string }>
+    ).map((r) => r.name);
+    expect(indexes).toContain("idx_shopping_list_items_list_id");
+  });
+
   it("should allow inserting data after migrations", () => {
     runMigrations(db);
 
@@ -168,7 +190,7 @@ describe("Migrations", () => {
     migration002.up(db);
     db.prepare("INSERT INTO schema_version (version) VALUES (2)").run();
 
-    // Now re-run all migrations — only 3 and 4 should be applied
+    // Now re-run all migrations — only 3, 4 and 5 should be applied
     runMigrations(db);
 
     const versions = (
@@ -176,6 +198,6 @@ describe("Migrations", () => {
         version: number;
       }>
     ).map((r) => r.version);
-    expect(versions).toEqual([1, 2, 3, 4]);
+    expect(versions).toEqual([1, 2, 3, 4, 5]);
   });
 });

@@ -3,12 +3,19 @@ import { migration001 } from "./migrations/001_initial";
 import { migration002 } from "./migrations/002_legacy_columns";
 import { migration003 } from "./migrations/003_integer_money";
 import { migration004 } from "./migrations/004_indexes";
+import { migration005 } from "./migrations/005_shopping_lists";
 
 /* ------------------------------------------------------------------ */
 /*  Migration definitions (immutable — never modify existing entries)  */
 /* ------------------------------------------------------------------ */
 
-const migrations = [migration001, migration002, migration003, migration004] as const;
+const migrations = [
+  migration001,
+  migration002,
+  migration003,
+  migration004,
+  migration005,
+] as const;
 
 /* ------------------------------------------------------------------ */
 /*  Public API                                                         */

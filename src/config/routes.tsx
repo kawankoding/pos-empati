@@ -4,6 +4,7 @@ import PosPage from "@pages/PosPage";
 import ProductsPage from "@pages/ProductsPage";
 import ReportingPage from "@pages/ReportingPage";
 import SalesPage from "@pages/SalesPage";
+import ShoppingListPage from "@pages/ShoppingListPage";
 import SettingsPage from "@pages/settings/SettingsPage";
 import type { AuthUser, Role } from "@lib/api";
 
@@ -35,6 +36,11 @@ export const routes: PageConfig[] = [
     path: "/sales",
     allowedRoles: ["admin"],
     element: () => <SalesPage />,
+  },
+  {
+    path: "/shopping-list",
+    allowedRoles: ["admin"],
+    element: () => <ShoppingListPage />,
   },
   {
     path: "/reporting",

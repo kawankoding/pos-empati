@@ -80,6 +80,32 @@ contextBridge.exposeInMainWorld("api", {
   listSales: () => ipcRenderer.invoke("sales:list"),
   getSale: (id: number) => ipcRenderer.invoke("sales:get", id),
 
+  listShoppingLists: () => ipcRenderer.invoke("shoppingLists:list"),
+  getShoppingList: (id: number) => ipcRenderer.invoke("shoppingLists:get", id),
+  createShoppingList: (payload: { name: string }) =>
+    ipcRenderer.invoke("shoppingLists:create", payload),
+  updateShoppingList: (payload: { id: number; name: string }) =>
+    ipcRenderer.invoke("shoppingLists:update", payload),
+  deleteShoppingList: (id: number) => ipcRenderer.invoke("shoppingLists:delete", id),
+  addShoppingListItem: (payload: {
+    listId: number;
+    productId: number | null;
+    name: string;
+    qty: number;
+    note: string;
+  }) => ipcRenderer.invoke("shoppingLists:addItem", payload),
+  updateShoppingListItem: (payload: {
+    id: number;
+    qty?: number;
+    note?: string;
+    checked?: number;
+  }) => ipcRenderer.invoke("shoppingLists:updateItem", payload),
+  removeShoppingListItem: (id: number) => ipcRenderer.invoke("shoppingLists:removeItem", id),
+  clearCheckedShoppingListItems: (listId: number) =>
+    ipcRenderer.invoke("shoppingLists:clearChecked", listId),
+  printShoppingList: (payload: Record<string, unknown>) =>
+    ipcRenderer.invoke("print:shoppingList", payload),
+
   reportSummary: (payload: { startDate: string; endDate: string }) =>
     ipcRenderer.invoke("reports:summary", payload),
 

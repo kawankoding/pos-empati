@@ -6,8 +6,11 @@ import type {
   ProfitSummary,
   PublicUser,
   ReportSummary,
+  SaleDetail,
   SaleRecord,
   SettingsMap,
+  ShoppingList,
+  ShoppingListDetail,
   TopProduct,
 } from "@lib/api";
 
@@ -92,6 +95,29 @@ declare global {
       >;
 
       listSales: () => Promise<SaleRecord[]>;
+      getSale: (id: number) => Promise<SaleDetail | null>;
+
+      listShoppingLists: () => Promise<ShoppingList[]>;
+      getShoppingList: (id: number) => Promise<ShoppingListDetail | null>;
+      createShoppingList: (payload: { name: string }) => Promise<MutationResult>;
+      updateShoppingList: (payload: { id: number; name: string }) => Promise<MutationResult>;
+      deleteShoppingList: (id: number) => Promise<MutationResult>;
+      addShoppingListItem: (payload: {
+        listId: number;
+        productId: number | null;
+        name: string;
+        qty: number;
+        note: string;
+      }) => Promise<MutationResult>;
+      updateShoppingListItem: (payload: {
+        id: number;
+        qty?: number;
+        note?: string;
+        checked?: number;
+      }) => Promise<MutationResult>;
+      removeShoppingListItem: (id: number) => Promise<MutationResult>;
+      clearCheckedShoppingListItems: (listId: number) => Promise<MutationResult>;
+      printShoppingList: (payload: Record<string, unknown>) => Promise<MutationResult>;
 
       reportSummary: (payload: { startDate: string; endDate: string }) => Promise<{
         ok: true;
@@ -121,6 +147,16 @@ declare global {
 
       printReceipt: (payload: Record<string, unknown>) => Promise<MutationResult>;
       listPrinters: () => Promise<Array<{ vendorId: number; productId: number }>>;
+      installUpdate: () => Promise<{ ok: true }>;
+      createBackup: () => Promise<
+        | {
+            ok: true;
+            meta: { timestamp: string; schemaVersion: number; checksum: string };
+          }
+        | { ok: false; message: string }
+      >;
+      restoreBackup: () => Promise<{ ok: true } | { ok: false; message: string }>;
+      exportCsv: (payload: { csv: string; defaultName: string }) => Promise<MutationResult>;
     };
   }
 }

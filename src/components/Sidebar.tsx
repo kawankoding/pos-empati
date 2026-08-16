@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  ClipboardList,
   LayoutDashboard,
   LogOut,
   Package,
@@ -12,7 +13,14 @@ import type { Role } from "@lib/api";
 import logo from "/images/toko-empati.png";
 
 export type SidebarAction =
-  "pos" | "products" | "categories" | "sales" | "reporting" | "settings" | "logout";
+  | "pos"
+  | "products"
+  | "categories"
+  | "sales"
+  | "shopping-list"
+  | "reporting"
+  | "settings"
+  | "logout";
 
 type SidebarItem = {
   key: SidebarAction;
@@ -26,6 +34,7 @@ const primaryItems: SidebarItem[] = [
   { key: "products", icon: Package, label: "Produk", roles: ["admin"] },
   { key: "categories", icon: Tags, label: "Kategori", roles: ["admin"] },
   { key: "sales", icon: Receipt, label: "Penjualan", roles: ["admin"] },
+  { key: "shopping-list", icon: ClipboardList, label: "Daftar Belanja", roles: ["admin"] },
   { key: "reporting", icon: BarChart3, label: "Laporan", roles: ["admin"] },
 ];
 

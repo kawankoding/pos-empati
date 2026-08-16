@@ -8,13 +8,21 @@ import Button from "./ui/Button";
 import Modal from "./ui/Modal";
 
 type SidebarAction =
-  "pos" | "products" | "categories" | "sales" | "reporting" | "settings" | "logout";
+  | "pos"
+  | "products"
+  | "categories"
+  | "sales"
+  | "shopping-list"
+  | "reporting"
+  | "settings"
+  | "logout";
 
 const sidebarRouteMap: Record<string, string> = {
   pos: "/pos",
   products: "/products",
   categories: "/categories",
   sales: "/sales",
+  "shopping-list": "/shopping-list",
   reporting: "/reporting",
   settings: "/settings",
 };
@@ -23,6 +31,7 @@ function pathToAction(pathname: string): SidebarAction {
   if (pathname.startsWith("/products")) return "products";
   if (pathname.startsWith("/categories")) return "categories";
   if (pathname.startsWith("/sales")) return "sales";
+  if (pathname.startsWith("/shopping-list")) return "shopping-list";
   if (pathname.startsWith("/reporting")) return "reporting";
   if (pathname.startsWith("/settings")) return "settings";
   return "pos";

@@ -93,6 +93,31 @@ export type SaleDetail = SaleRecord & {
   items: SaleItemRecord[];
 };
 
+export type ShoppingListItem = {
+  id: number;
+  list_id: number;
+  product_id: number | null;
+  name: string;
+  qty: number;
+  note: string;
+  checked: number;
+  created_at: string;
+};
+
+export type ShoppingList = {
+  id: number;
+  name: string;
+  created_by: number | null;
+  created_at: string;
+  item_count: number;
+  checked_count: number;
+  pending_count: number;
+};
+
+export type ShoppingListDetail = ShoppingList & {
+  items: ShoppingListItem[];
+};
+
 export type AppInfo = {
   name: string;
   version: string;
@@ -232,6 +257,57 @@ export const api = {
 
   getSale(id: number): Promise<SaleDetail | null> {
     return window.api.getSale(id);
+  },
+
+  listShoppingLists(): Promise<ShoppingList[]> {
+    return window.api.listShoppingLists();
+  },
+
+  getShoppingList(id: number): Promise<ShoppingListDetail | null> {
+    return window.api.getShoppingList(id);
+  },
+
+  createShoppingList(payload: { name: string }): Promise<MutationResult> {
+    return window.api.createShoppingList(payload);
+  },
+
+  updateShoppingList(payload: { id: number; name: string }): Promise<MutationResult> {
+    return window.api.updateShoppingList(payload);
+  },
+
+  deleteShoppingList(id: number): Promise<MutationResult> {
+    return window.api.deleteShoppingList(id);
+  },
+
+  addShoppingListItem(payload: {
+    listId: number;
+    productId: number | null;
+    name: string;
+    qty: number;
+    note: string;
+  }): Promise<MutationResult> {
+    return window.api.addShoppingListItem(payload);
+  },
+
+  updateShoppingListItem(payload: {
+    id: number;
+    qty?: number;
+    note?: string;
+    checked?: number;
+  }): Promise<MutationResult> {
+    return window.api.updateShoppingListItem(payload);
+  },
+
+  removeShoppingListItem(id: number): Promise<MutationResult> {
+    return window.api.removeShoppingListItem(id);
+  },
+
+  clearCheckedShoppingListItems(listId: number): Promise<MutationResult> {
+    return window.api.clearCheckedShoppingListItems(listId);
+  },
+
+  printShoppingList(payload: Record<string, unknown>): Promise<MutationResult> {
+    return window.api.printShoppingList(payload);
   },
 
   reportSummary(payload: { startDate: string; endDate: string }): Promise<{
